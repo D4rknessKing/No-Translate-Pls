@@ -1,0 +1,21 @@
+{
+  "manifest_version": 2,
+  "name": "No Translate Pls",
+  "description": "Remove almost all the non optional content translation on youtube (Only titles for now)",
+  "version": "1.0",
+  "content_scripts": [{
+	"matches": [
+	  "https://youtube.com/*",
+	  "https://*.youtube.com/*"
+	],
+	"js": ["content.js"]
+  }],
+  "browser_action": {
+	"default_icon": "ntp.png"
+  },
+  "icons": { 
+	"48": "ntp48.png",
+	"128": "ntp128.png",
+	"256": "ntp.png"
+  }
+}
