@@ -5,7 +5,7 @@ console.debug("Starting extension...");
 //IMPORTANT: This code sucks, i know. I have never developed anything with js before and i still dont know how this ended up working.
 //I would like to thanks @Nathata#1957 and Stack Overflow for helping me with basic js.
 
-let apiKey = "";
+const apiKey = "";
 let cache = {};
 
 setInterval(function() {
@@ -63,7 +63,7 @@ setInterval(function() {
 		try{
 			let trailerDoc = document.getElementsByTagName("ytd-channel-video-player-renderer")[0];
 			let id = trailerDoc.children[1].children[0].children[0].children[0].href.href.match(/.*[?&]v=([^&]+).*/)[1];
-			hashmap[id] = trailerDoc.children[1].children[0].children[0].children[0]
+			hashmap[id] = trailerDoc.children[1].children[0].children[0].children[0];
 		}catch (err) {}
 	}
 	
@@ -71,7 +71,7 @@ setInterval(function() {
 	//Gets the main video in the HTML Document and registers it
 	if(window.location.href.includes("watch")){
 		try{
-			let mainDoc = document.getElementsByClassName("title ytd-video-primary-info-renderer")[0]
+			let mainDoc = document.getElementsByClassName("title ytd-video-primary-info-renderer")[0];
 			let id = mainDoc.baseURI.match(/.*[?&]v=([^&]+).*/)[1];
 			hashmap[id] = mainDoc.children[0];
 		}catch (err) {}
@@ -82,13 +82,13 @@ setInterval(function() {
 	//If there are new non-cached ids we make an api request and cache then, if not we make sure the title have already been changed or else we change it.
 	if(nonCachedIds.length > 0){
 		while(nonCachedIds.length > 45){
-			apiRequest(hashmap, nonCachedIds.slice(0, 45))
+			apiRequest(hashmap, nonCachedIds.slice(0, 45));
 			nonCachedIds = nonCachedIds.slice(45, nonCachedIds.length)
 		}
 		apiRequest(hashmap, nonCachedIds)
 	}else if(cachedIds.length > 0){
 		[].forEach.call(cachedIds, (videoId)=> {
-			if(hashmap[videoId].innerText != cache[videoId].snippet.title) {
+			if(hashmap[videoId].innerText !== cache[videoId].snippet.title) {
 				console.debug("Changing "+videoId+ " title");
 				hashmap[videoId].innerText = cache[videoId].snippet.title;
 			}
@@ -99,26 +99,26 @@ setInterval(function() {
 }, 1000);
 
 function apiRequest(hashmap, ids) {
-	var xhr = new XMLHttpRequest();
+	let xhr = new XMLHttpRequest();
 	console.debug("Requesting "+ids.length+" videos information from youtube api...");
 	xhr.open("GET", "https://www.googleapis.com/youtube/v3/videos?id="+ids.join(",")+"&part=snippet&key="+apiKey, true);
-	xhr.onload = function (e) {
+	xhr.onload = function () {
 		if (xhr.readyState === 4) {
 			if (xhr.status === 200) {
-				json = JSON.parse(xhr.responseText);
+				let json = JSON.parse(xhr.responseText);
 				[].forEach.call(json.items, (videoJson)=> {
 					cache[videoJson.id] = videoJson;
 					console.debug("Changing "+videoJson.id+" title");
 					hashmap[videoJson.id].innerText = videoJson.snippet.title;
 				});
 			}else{
-				console.debug("Unknown error while requesting the Youtube API.")
+				console.debug("Unknown error while requesting the Youtube API.");
 				console.error(xhr.statusText);
 			}
 		}
 	};
-	xhr.onerror = function (e) {
-		console.debug("Unknown error while requesting the Youtube API.")
+	xhr.onerror = function () {
+		console.debug("Unknown error while requesting the Youtube API.");
     	console.error(xhr.statusText);
 	};
 	xhr.send(null);
