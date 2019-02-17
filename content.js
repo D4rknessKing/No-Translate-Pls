@@ -21,7 +21,7 @@ setInterval(function() {
 		try{
 			//this is what i should have used from the beginning
 			if(yt.search){
-				let id = yt.search.split("?v=")[1].split("&")[0];
+				let id = yt.search.match(/.*[?&]v=([^&]+).*/)[1];
 				hashmap[id] = yt;
 				if(cache[id]){
 					cachedIds[ii] = id;
@@ -32,7 +32,7 @@ setInterval(function() {
 				}
 			//this is what i used instead
 			}else if(yt.href){
-				let id = yt.href.split("?v=")[1].split("&")[0];
+				let id = yt.href.match(/.*[?&]v=([^&]+).*/)[1];
 				hashmap[id] = yt;
 				if(cache[id]){
 					cachedIds[ii] = id;
@@ -43,7 +43,7 @@ setInterval(function() {
 				}
 			//this is youtube's fault™
 			}else if(yt.offsetParent.children[0].children[0].children[0].href){
-				let id = yt.offsetParent.children[0].children[0].children[0].href.split("?v=")[1].split("&")[0];
+				let id = yt.offsetParent.children[0].children[0].children[0].href.match(/.*[?&]v=([^&]+).*/)[1];
 				hashmap[id]	= yt;
 				if(cache[id]){
 					cachedIds[ii] = id;
@@ -62,7 +62,7 @@ setInterval(function() {
 	if(window.location.href.includes("user")){
 		try{
 			let trailerDoc = document.getElementsByTagName("ytd-channel-video-player-renderer")[0];
-			let id = trailerDoc.children[1].children[0].children[0].children[0].href.href.split("?v=")[1].split("&")[0]
+			let id = trailerDoc.children[1].children[0].children[0].children[0].href.href.match(/.*[?&]v=([^&]+).*/)[1];
 			hashmap[id] = trailerDoc.children[1].children[0].children[0].children[0]
 		}catch (err) {}
 	}
@@ -72,7 +72,7 @@ setInterval(function() {
 	if(window.location.href.includes("watch")){
 		try{
 			let mainDoc = document.getElementsByClassName("title ytd-video-primary-info-renderer")[0]
-			let id = mainDoc.baseURI.split("?v=")[1].split("&")[0];
+			let id = mainDoc.baseURI.match(/.*[?&]v=([^&]+).*/)[1];
 			hashmap[id] = mainDoc.children[0];
 		}catch (err) {}
 	}
