@@ -11,9 +11,7 @@ let cache = {};
 setInterval(function() {
 	let hashmap = {};
 
-	let i = 0;
 	let nonCachedIds = [];
-	let ii = 0;
 	let cachedIds = [];
 
 	//Gets all videos in the HTML Document and registers them
@@ -24,10 +22,9 @@ setInterval(function() {
 				let id = yt.search.match(/.*[?&]v=([^&]+).*/)[1];
 				hashmap[id] = yt;
 				if(cache[id]){
-					cachedIds[ii] = id;
-					ii++;
+					cachedIds[cachedIds.length] = id;
 				}else{
-					nonCachedIds[i] = id;
+					nonCachedIds[nonCachedIds.length] = id;
 					i++;
 				}
 			//this is what i used instead
@@ -35,22 +32,18 @@ setInterval(function() {
 				let id = yt.href.match(/.*[?&]v=([^&]+).*/)[1];
 				hashmap[id] = yt;
 				if(cache[id]){
-					cachedIds[ii] = id;
-					ii++;
+					cachedIds[cachedIds.length] = id;
 				}else{
-					nonCachedIds[i] = id;
-					i++;
+					nonCachedIds[nonCachedIds.length] = id;
 				}
 			//this is youtube's fault™
 			}else if(yt.offsetParent.children[0].children[0].children[0].href){
 				let id = yt.offsetParent.children[0].children[0].children[0].href.match(/.*[?&]v=([^&]+).*/)[1];
 				hashmap[id]	= yt;
 				if(cache[id]){
-					cachedIds[ii] = id;
-					ii++;
+					cachedIds[cachedIds.length] = id;
 				}else{
-					nonCachedIds[i] = id;
-					i++;
+					nonCachedIds[nonCachedIds.length] = id;
 				}
 			}else{
 				console.debug("Could not find a valid video id");
@@ -59,38 +52,62 @@ setInterval(function() {
 	});
 
 	//Gets the channel trailer in the HTML Document and registers it
-	if(window.location.href.includes("user")){
+	if(window.location.href.includes("user") || window.location.href.includes("channel")){
 		try{
 			let trailerDoc = document.getElementsByTagName("ytd-channel-video-player-renderer")[0];
-			let id = trailerDoc.children[1].children[0].children[0].children[0].href.href.match(/.*[?&]v=([^&]+).*/)[1];
+			let id = trailerDoc.children[1].children[0].children[0].children[0].href.match(/.*[?&]v=([^&]+).*/)[1];
 			hashmap[id] = trailerDoc.children[1].children[0].children[0].children[0];
+			if(cache[id]){
+				cachedIds[cachedIds.length] = id;
+			}else{
+				nonCachedIds[nonCachedIds.length] = id;
+			}
 		}catch (err) {}
 	}
 	
-	
 	//Gets the main video in the HTML Document and registers it
-	if(window.location.href.includes("watch")){
+	if(window.location.href.includes("watch?v=")){
 		try{
 			let mainDoc = document.getElementsByClassName("title ytd-video-primary-info-renderer")[0];
 			let id = mainDoc.baseURI.match(/.*[?&]v=([^&]+).*/)[1];
 			hashmap[id] = mainDoc.children[0];
+			if(cache[id]){
+				cachedIds[cachedIds.length] = id;
+			}else{
+				nonCachedIds[nonCachedIds.length] = id;
+			}
 		}catch (err) {}
 	}
 	
-
-
-	//If there are new non-cached ids we make an api request and cache then, if not we make sure the title have already been changed or else we change it.
+	//If there are new non-cached ids we make an api request and cache them.
 	if(nonCachedIds.length > 0){
 		while(nonCachedIds.length > 45){
 			apiRequest(hashmap, nonCachedIds.slice(0, 45));
 			nonCachedIds = nonCachedIds.slice(45, nonCachedIds.length)
 		}
 		apiRequest(hashmap, nonCachedIds)
-	}else if(cachedIds.length > 0){
+	}
+	
+	//Checks all the cachedIds and change the video properties
+	if(cachedIds.length > 0){
 		[].forEach.call(cachedIds, (videoId)=> {
-			if(hashmap[videoId].innerText !== cache[videoId].snippet.title) {
-				console.debug("Changing "+videoId+ " title");
-				hashmap[videoId].innerText = cache[videoId].snippet.title;
+			let videoObj = hashmap[videoId];
+			if(videoObj.innerText !== cache[videoId].snippet.title) {
+				console.debug("Updating "+videoId+" properties.");
+				videoObj.innerText = cache[videoId].snippet.title;
+
+				switch(videoObj.parentElement.parentElement.id) {
+					case "title-wrapper":
+						videoObj.parentElement.parentElement.parentElement.parentElement.children[1].innerText = cache[videoId].snippet.description;
+						break;
+					case "metadata-container":
+						videoObj.parentElement.parentElement.parentElement.children[1].children[0].children[0].innerText = cache[videoId].snippet.description
+						break;
+					case "container":
+						videoObj.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[10].children[2].children[0].children[0].children[2].children[0].innerText = cache[videoId].snippet.description;
+						break;
+					default:
+				}
 			}
 		});
 	}
@@ -108,8 +125,6 @@ function apiRequest(hashmap, ids) {
 				let json = JSON.parse(xhr.responseText);
 				[].forEach.call(json.items, (videoJson)=> {
 					cache[videoJson.id] = videoJson;
-					console.debug("Changing "+videoJson.id+" title");
-					hashmap[videoJson.id].innerText = videoJson.snippet.title;
 				});
 			}else{
 				console.debug("Unknown error while requesting the Youtube API.");
