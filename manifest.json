@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "No Translate Pls",
-  "description": "Remove almost all the non optional content translation on youtube (Only titles for now)",
-  "version": "1.0",
+  "description": "Remove almost all the forced content translation on youtube (video titles and descriptions).",
+  "version": "1.1",
   "content_scripts": [{
 	"matches": [
 	  "https://youtube.com/*",
